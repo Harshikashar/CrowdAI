@@ -1,0 +1,170 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --ring: 215 20.2% 65.1%;
+ 
+    --radius: 0.5rem;
+    
+    --crowdai-blue: 210 100% 50%;
+    --crowdai-purple: 270 76% 53%;
+    --crowdai-indigo: 250 95% 64%;
+    --crowdai-dark: 222 47% 11%;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+ 
+    --ring: 217.2 32.6% 17.5%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes */
+.text-shadow {
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.75);
+}
+
+.bg-crowdai-blue {
+  background-color: hsl(var(--crowdai-blue));
+}
+
+.bg-crowdai-purple {
+  background-color: hsl(var(--crowdai-purple));
+}
+
+.bg-crowdai-indigo {
+  background-color: hsl(var(--crowdai-indigo));
+}
+
+.bg-crowdai-dark {
+  background-color: hsl(var(--crowdai-dark));
+}
+
+.text-crowdai-blue {
+  color: hsl(var(--crowdai-blue));
+}
+
+.text-crowdai-purple {
+  color: hsl(var(--crowdai-purple));
+}
+
+.text-crowdai-indigo {
+  color: hsl(var(--crowdai-indigo));
+}
+
+.text-crowdai-dark {
+  color: hsl(var(--crowdai-dark));
+}
+
+.border-crowdai-blue {
+  border-color: hsl(var(--crowdai-blue));
+}
+
+/* Feature page specific styles */
+.feature-detail-section {
+  padding-top: 100px;
+  margin-top: -60px;
+}
+
+/* Fix padding for all pages to ensure nav doesn't cover content */
+main.content-area {
+  padding-top: 80px;
+}
+
+/* Add specific class for page content that appears below fixed navbar */
+.page-content {
+  padding-top: 5rem; /* 80px equivalent */
+}
+
+/* Team member card styles */
+.team-member-card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:scale-[1.02];
+}
+
+.team-member-image {
+  @apply w-full h-64 object-cover;
+}
+
+.team-member-info {
+  @apply p-6;
+}
+
+/* Animated glass card effect */
+.glass-card {
+  @apply bg-white/80 backdrop-blur-md shadow-lg rounded-lg border border-gray-100;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  @apply shadow-xl bg-white/90;
+  transform: translateY(-5px);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  @apply bg-gradient-to-r from-crowdai-blue to-crowdai-purple bg-clip-text text-transparent;
+}
