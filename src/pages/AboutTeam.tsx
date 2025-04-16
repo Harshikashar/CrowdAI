@@ -4,16 +4,16 @@ import { Github, Linkedin, Mail } from "lucide-react";
 
 interface TeamMemberProps {
   name: string;
-  role: string;
+  roll: string;
   education: string;
-  bio: string;
+  
   email: string;
   image?: string;
   linkedin?: string;
   github?: string;
 }
 
-const TeamMember = ({ name, role, education, bio, email, image, linkedin, github }: TeamMemberProps) => (
+const TeamMember = ({ name, roll, education, email, image, linkedin, github }: TeamMemberProps) => (
   <div className="bg-white rounded-lg shadow-md overflow-hidden">
     <div className="h-64 bg-gradient-to-r from-crowdai-blue to-crowdai-purple flex items-center justify-center">
       {image ? (
@@ -26,9 +26,9 @@ const TeamMember = ({ name, role, education, bio, email, image, linkedin, github
     </div>
     <div className="p-6">
       <h3 className="text-xl font-bold mb-1">{name}</h3>
-      <p className="text-crowdai-blue mb-2">{role}</p>
+      <p className="text-crowdai-blue mb-2">{roll}</p>
       <p className="text-gray-600 mb-3"><strong>Education:</strong> {education}</p>
-      <p className="text-gray-600 mb-4">{bio}</p>
+      
       <div className="flex space-x-3">
         <a href={`mailto:${email}`} className="text-gray-500 hover:text-crowdai-blue">
           <Mail className="h-5 w-5" />
@@ -52,49 +52,41 @@ const AboutTeam = () => {
   // Sample team data - replace with actual team information
   const teamMembers: TeamMemberProps[] = [
     {
-      name: "Alex Johnson",
-      role: "Project Lead & AI Specialist",
-      education: "M.S. in Computer Science, Stanford University",
-      bio: "Alex has over 10 years of experience in AI and machine learning, specializing in computer vision applications. He leads the overall development and strategic direction of CrowdAI.",
-      email: "alex.johnson@crowdai.com",
-      linkedin: "https://linkedin.com/in/alexjohnson",
-      github: "https://github.com/alexjohnson"
+      name: "Sanskriti Jain",
+      roll:"2216377",
+      education: "B.Tech in Computer Science, Banasthali Vidyapith",
+      email: "sanskriti8015@gmail.com",
+      linkedin: "https://linkedin.com/in/sanskriti-jain-b85256265 ",
+      
     },
     {
-      name: "Sophia Chen",
-      role: "Computer Vision Engineer",
-      education: "Ph.D. in Computer Science, MIT",
-      bio: "Sophia is an expert in computer vision algorithms with a Ph.D. in Computer Science. She designs and optimizes the core detection models used in the CrowdAI system.",
-      email: "sophia.chen@crowdai.com",
-      github: "https://github.com/sophiachen",
-      linkedin: "https://linkedin.com/in/sophiachen"
+      name: "Supriya Kumari",
+      roll:"2216912",
+      education: "B.Tech in Information Technology, Banasthali Vidyapith",
+      email: "supriyeah047@gmail.com",
+      
+      linkedin: "https://linkedin.com/in/supriya-kumari-866b0824b"
     },
     {
-      name: "Marcus Rodriguez",
-      role: "Backend Developer",
-      education: "B.S. in Software Engineering, University of California",
-      bio: "Marcus specializes in scalable backend systems and real-time data processing. He ensures CrowdAI can handle massive data volumes with minimal latency.",
-      email: "marcus.rodriguez@crowdai.com",
-      github: "https://github.com/marcusrod",
-      linkedin: "https://linkedin.com/in/marcusrodriguez"
+      name: "Ritika Malik",
+      roll:"2216881",
+      education: "B.Tech in Information technology, Banasthali Vidyapith",
+      email: "ritiika.maliik@gmail.com",
+      linkedin: "https://linkedin.com/in/ritika3112"
     },
     {
-      name: "Priya Patel",
-      role: "UX/UI Designer",
-      education: "M.F.A. in Interaction Design, Rhode Island School of Design",
-      bio: "Priya creates intuitive interfaces that make complex analytics accessible. Her design approach focuses on clarity and actionable insights for users of all technical levels.",
-      email: "priya.patel@crowdai.com",
-      linkedin: "https://linkedin.com/in/priyapatel",
-      github: "https://github.com/priyapatel"
+      name: "Harshika Sharma",
+      roll:"2216276",
+      education: "B.Tech in Computer Science, Banasthali Vidyapith",
+      email: "sharshika408@gmil.com",
+      linkedin: "https://linkedin.com/in/harshika-sharma-",
     },
     {
-      name: "David Kim",
-      role: "Data Scientist",
-      education: "M.S. in Data Science, University of Washington",
-      bio: "David applies statistical methods and predictive modeling to enhance the accuracy of crowd analysis. He specializes in pattern recognition and anomaly detection.",
-      email: "david.kim@crowdai.com",
-      github: "https://github.com/davidkim",
-      linkedin: "https://linkedin.com/in/davidkim"
+      name: "Sakshi Chauhan",
+      roll:"2216374",
+      education: "B.Tech in Computer Science, Banasthali Vidyapith",
+      email: "sakshichauhan120404@gmail.com",
+      linkedin: "https://linkedin.com/in/sakshi-chauhan-0b1a1a1b4",
     }
   ];
 

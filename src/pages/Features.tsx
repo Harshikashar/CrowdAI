@@ -45,7 +45,7 @@ const Features = () => {
               icon={<Bell className="h-6 w-6" />}
               title="Alert System"
               description="Receive notifications when crowd density exceeds your specified thresholds."
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/alert")}
             />
           </div>
         </div>

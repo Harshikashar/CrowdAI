@@ -73,21 +73,21 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 mr-3 text-crowdai-blue mt-0.5" />
-                <span className="text-gray-300">123 Innovation Street, Tech City, TC 12345</span>
+                <span className="text-gray-300">BANASTHALI VIAYAPITH</span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 mr-3 text-crowdai-blue" />
-                <span className="text-gray-300">+1 (555) 123-4567</span>
+                <span className="text-gray-300">+91 1234567890</span>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 mr-3 text-crowdai-blue" />
-                <span className="text-gray-300">info@crowdai.com</span>
+                <span className="text-gray-300">crowdai@gmail.com</span>
               </li>
             </ul>
           </div>
           
           {/* Newsletter */}
-          <div className="col-span-1">
+          {/*<div className="col-span-1">
             <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
             <p className="text-gray-300 mb-4">Subscribe to our newsletter for the latest updates and insights.</p>
             <form className="flex">
@@ -103,7 +103,7 @@ const Footer = () => {
                 Subscribe
               </button>
             </form>
-          </div>
+  </div>*/}
         </div>
         
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">

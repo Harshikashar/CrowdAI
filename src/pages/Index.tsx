@@ -182,6 +182,7 @@ const Index = () => {
 
 export default Index;*/
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -190,10 +191,10 @@ import FeatureCard from "@/components/FeatureCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart3, Shield, Users, LineChart, Eye, Zap, BrainCircuit } from "lucide-react";
 import axios from "axios";
-
+import { Camera } from "lucide-react";
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false); // Loading state for button
-
+  const navigate = useNavigate();
   useEffect(() => {
     document.body.classList.add('landing-page');
     
@@ -202,8 +203,11 @@ const Index = () => {
     };
   }, []);
   
+  const handleStartDetection = () => {
+    navigate("/camera");
+  };
 
-  const handleDetectionClick = async () => {
+  /*const handleDetectionClick = async () => {
     setIsLoading(true); // Set loading to true when button is clicked
     try {
       // Make a request to the backend to start detection
@@ -216,7 +220,7 @@ const Index = () => {
     } finally {
       setIsLoading(false); // Set loading to false when request finishes
     }
-  };
+  };*/
 
   return (
     <>
@@ -246,10 +250,12 @@ const Index = () => {
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             <Button
               className="bg-crowdai-blue hover:bg-blue-700 text-white px-6 py-6 rounded-md text-lg font-medium"
-              onClick={handleDetectionClick}
-              disabled={isLoading} // Disable button during loading
+              onClick={handleStartDetection}
+              
             >
-              {isLoading ? "Starting Detection..." : "Try Now"} {/* Show loading state */}
+              {/*{isLoading ? "Starting Detection..." : "Try Now"}  Show loading state */}
+              <Camera className="mr-2 h-5 w-5" />
+              Try Now
             </Button>
 
             <Button asChild variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 px-6 py-6 rounded-md text-lg font-medium">
