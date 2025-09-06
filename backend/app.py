@@ -8,35 +8,38 @@ from flask_cors import CORS
 import base64
 import os
 
+# Initialize the Flask app
 app = Flask(__name__)
-@app.route('/')
-def home():
-    return "Backend server is running!"
-CORS(app)  # Enable CORS for all routes
+# Enable CORS to allow your React frontend to communicate with this backend
+CORS(app)
 
-# Global variables
+# --- Global Variables ---
+# These variables will hold the state of the application
 camera = None
 camera_thread = None
-stop_thread = False
-last_frame = None
-last_frame_with_boxes = None
+stop_thread = False  # A flag to signal the camera thread to stop
+last_frame = None  # Stores the latest raw frame from the camera
+last_frame_with_boxes = None  # Stores the latest frame with detection boxes drawn on it
 detection_data = {
     "peopleCount": 0,
     "density": 0,
     "densityLevel": "low"
 }
 
-# Create directory for saving images
+# --- Setup ---
+# Create a directory to save captured images if it doesn't already exist
 os.makedirs('captured_images', exist_ok=True)
 
-# Load YOLO model - only detect people (class 0)
+# Load the YOLOv8 model. We are telling it to only detect people (class 0).
 model = YOLO('yolov8n.pt')
 
+# --- Helper Functions ---
 def calculate_density(count, frame_area):
-    # Simple calculation - can be adjusted based on requirements
-    max_expected_people = 50  # Adjust based on your specific use case
+    """Calculates crowd density based on the number of people."""
+    # This is a simple calculation. You can make it more complex if needed.
+    max_expected_people = 50  # Assumption: max 50 people can fit in the view
     raw_density = min(100, (count / max_expected_people) * 100)
-    
+
     if raw_density >= 70:
         level = "high"
     elif raw_density >= 30:
@@ -46,200 +49,165 @@ def calculate_density(count, frame_area):
         
     return round(raw_density, 1), level
 
-def generate_frames():
+def camera_processing_thread():
+    """The main function that runs in a separate thread to process camera frames."""
     global camera, last_frame, last_frame_with_boxes, detection_data, stop_thread
     
-    if camera is None:
-        camera = cv2.VideoCapture(0)
-        if not camera.isOpened():
-            print("Error: Could not open camera")
-            return
+    # Initialize the camera
+    camera = cv2.VideoCapture(0)
+    if not camera.isOpened():
+        print("Error: Could not open camera")
+        return
     
     frame_width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_area = frame_width * frame_height
     
+    print("Camera thread started.")
+    
     while not stop_thread:
         success, frame = camera.read()
         if not success:
-            print("Failed to grab frame")
+            print("Failed to grab frame, stopping thread.")
             break
             
-        # Save the original frame
+        # Store the original frame
         last_frame = frame.copy()
-            
-        # YOLOv8 detection - only people (class 0)
-        results = model(frame, classes=0)
         
-        # Extract detection results
+        # Perform YOLOv8 detection on the frame
+        results = model(frame, classes=0, verbose=False) # verbose=False for cleaner output
+        
+        # Extract results
         people_count = len(results[0].boxes)
         density_value, density_level = calculate_density(people_count, frame_area)
         
-        # Update detection data
+        # Update the global detection data dictionary
         detection_data = {
             "peopleCount": people_count,
             "density": density_value,
             "densityLevel": density_level
         }
         
-        # Draw bounding boxes on the frame
-        for r in results:
-            annotated_frame = r.plot()
-            last_frame_with_boxes = annotated_frame.copy()
-            
-            # Convert to jpeg format for streaming
-            ret, buffer = cv2.imencode('.jpg', annotated_frame)
-            frame_bytes = buffer.tobytes()
-            
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        # Draw bounding boxes on the frame for visualization
+        annotated_frame = results[0].plot()
+        last_frame_with_boxes = annotated_frame.copy()
         
-        # Short delay to reduce CPU usage
+        # A short delay to prevent the CPU from running at 100%
+        time.sleep(0.05)
+    
+    # Release the camera resource when the loop is stopped
+    camera.release()
+    camera = None
+    print("Camera thread stopped and resources released.")
+
+def generate_frames_for_stream():
+    """A generator function that yields frames for the video stream."""
+    while not stop_thread:
+        if last_frame_with_boxes is None:
+            time.sleep(0.1)
+            continue
+            
+        # Encode the frame with boxes as JPEG
+        ret, buffer = cv2.imencode('.jpg', last_frame_with_boxes)
+        if not ret:
+            continue
+        
+        frame_bytes = buffer.tobytes()
+        
+        # Yield the frame in the format required for multipart streaming
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
         time.sleep(0.05)
 
-def camera_capture():
-    for _ in generate_frames():
-        if stop_thread:
-            break
+# --- API Endpoints (Routes) ---
 
-@app.route('/start-detection')
+@app.route('/')
+def home():
+    """A simple route to check if the backend is running."""
+    return "CrowdAI Backend is running!"
+
+@app.route('/start-detection', methods=['POST'])
 def start_detection():
+    """Starts the camera processing thread."""
     global camera_thread, stop_thread
     
-    # If thread is already running, do nothing
     if camera_thread is not None and camera_thread.is_alive():
-        return jsonify({"status": "Detection already running"})
+        return jsonify({"status": "Detection is already running"})
     
-    # Reset flag and start new thread
     stop_thread = False
-    camera_thread = threading.Thread(target=camera_capture)
-    camera_thread.daemon = True
+    camera_thread = threading.Thread(target=camera_processing_thread)
     camera_thread.start()
     
-    return jsonify({"status": "Detection started"})
+    return jsonify({"status": "Detection started successfully"})
 
-@app.route('/stop-detection')
+@app.route('/stop-detection', methods=['POST'])
 def stop_detection():
-    global camera, camera_thread, stop_thread, last_frame, last_frame_with_boxes
+    """Stops the camera processing thread and releases resources."""
+    global stop_thread, camera_thread
     
+    if camera_thread is None or not camera_thread.is_alive():
+        return jsonify({"status": "Detection is not running"})
+        
     stop_thread = True
+    camera_thread.join(timeout=2.0) # Wait for the thread to finish
     
-    # Wait for thread to finish
-    if camera_thread is not None:
-        camera_thread.join(timeout=1.0)
-    
-    # Save the last frame when stopping
+    # Save the last captured frame
     if last_frame is not None:
         timestamp = int(time.time())
-        cv2.imwrite(f'captured_images/last_frame_{timestamp}.jpg', last_frame)
-        if last_frame_with_boxes is not None:
-            cv2.imwrite(f'captured_images/last_frame_boxes_{timestamp}.jpg', last_frame_with_boxes)
-    
-    # Release camera
-    if camera is not None:
-        camera.release()
-        camera = None
+        cv2.imwrite(f'captured_images/capture_{timestamp}.jpg', last_frame_with_boxes)
     
     return jsonify({"status": "Detection stopped", "data": detection_data})
 
 @app.route('/video-feed')
 def video_feed():
-    return Response(generate_frames(),
+    """Provides the live video stream to the frontend."""
+    return Response(generate_frames_for_stream(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/detection-data')
 def get_detection_data():
-    global detection_data
+    """Provides the latest detection data (JSON) to the frontend."""
     return jsonify(detection_data)
 
-@app.route('/last-frame')
-def get_last_frame():
-    global last_frame_with_boxes, detection_data
-    
-    if last_frame_with_boxes is None:
-        return jsonify({"error": "No frame available"})
-    
-    # Convert the last frame to base64 for sending to frontend
-    ret, buffer = cv2.imencode('.jpg', last_frame_with_boxes)
-    frame_base64 = base64.b64encode(buffer).decode('utf-8')
-    
-    return jsonify({
-        "image": frame_base64,
-        "data": detection_data
-    })
-
-@app.route('/generate-heatmap')
+@app.route('/generate-heatmap', methods=['POST'])
 def generate_heatmap():
-    global last_frame, detection_data
-    
+    """Generates a heatmap from the last captured frame."""
     if last_frame is None:
-        return jsonify({"error": "No frame available for heatmap generation"})
+        return jsonify({"error": "No frame available for heatmap generation"}), 404
     
-    # Create a heatmap visualization based on the density level
     frame = last_frame.copy()
-    height, width = frame.shape[:2]
+    height, width, _ = frame.shape
     
-    # Create a heatmap overlay
-    heatmap = np.zeros((height, width, 3), dtype=np.uint8)
-    
-    # Set color based on density level
+    # Create a colored overlay based on density level
+    heatmap_overlay = np.zeros_like(frame, dtype=np.uint8)
     if detection_data["densityLevel"] == "high":
-        base_color = (0, 0, 255)  # Red (BGR)
+        color = (0, 0, 255)  # Red in BGR
     elif detection_data["densityLevel"] == "moderate":
-        base_color = (0, 165, 255)  # Orange (BGR)
+        color = (0, 165, 255)  # Orange in BGR
     else:
-        base_color = (0, 255, 0)  # Green (BGR)
+        color = (0, 255, 0)  # Green in BGR
     
-    # Create radial gradient from center
-    center_x, center_y = width // 2, height // 2
-    max_radius = int(min(width, height) * 0.8)
+    # Fill the overlay with the chosen color
+    cv2.rectangle(heatmap_overlay, (0, 0), (width, height), color, -1)
     
-    for y in range(height):
-        for x in range(width):
-            # Calculate distance from center
-            dist = np.sqrt((x - center_x)**2 + (y - center_y)**2)
-            if dist < max_radius:
-                # Calculate intensity (higher near center)
-                intensity = max(0, 1 - (dist / max_radius))
-                
-                # Apply color with intensity
-                heatmap[y, x] = [
-                    int(base_color[0] * intensity),
-                    int(base_color[1] * intensity),
-                    int(base_color[2] * intensity)
-                ]
-    
-    # Overlay heatmap on original image
+    # Blend the overlay with the original frame
     alpha = 0.5  # Transparency factor
-    heatmap_overlay = cv2.addWeighted(frame, 1 - alpha, heatmap, alpha, 0)
+    final_image = cv2.addWeighted(frame, 1 - alpha, heatmap_overlay, alpha, 0)
     
-    # Add text with analytics
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(
-        heatmap_overlay, 
-        f"People: {detection_data['peopleCount']} | Density: {detection_data['density']}%", 
-        (10, 30), 
-        font, 
-        0.7, 
-        (255, 255, 255), 
-        2
-    )
-    
-    # Save the heatmap
-    timestamp = int(time.time())
-    heatmap_path = f'captured_images/heatmap_{timestamp}.jpg'
-    cv2.imwrite(heatmap_path, heatmap_overlay)
-    
-    # Convert to base64 for sending to frontend
-    ret, buffer = cv2.imencode('.jpg', heatmap_overlay)
+    # Add analytics text to the image
+    info_text = f"People: {detection_data['peopleCount']} | Density: {detection_data['densityLevel'].capitalize()}"
+    cv2.putText(final_image, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+
+    # Encode the final image to base64 to send it as JSON
+    _, buffer = cv2.imencode('.jpg', final_image)
     heatmap_base64 = base64.b64encode(buffer).decode('utf-8')
     
     return jsonify({
-        "heatmap": heatmap_base64,
-        "data": detection_data,
-        "file_path": heatmap_path
+        "heatmapImage": heatmap_base64,
+        "data": detection_data
     })
 
+# --- Main Entry Point ---
 if __name__ == '__main__':
+    # Runs the Flask app
     app.run(debug=True, host='0.0.0.0', port=5001)
-
